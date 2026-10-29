@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>國中英文文法與中翻英特訓教室</title>
+  <!-- Tailwind CSS CDN 確保排版精美且具現代感 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pastel: {
+              yellow: '#FFF59D',
+              yellowLight: '#FFFDE7',
+              blue: '#B3E5FC',
+              blueLight: '#E1F5FE',
+              orange: '#FFCC80',
+              orangeLight: '#FFE0B2',
+              rose: '#F8BBD0',
+              cream: '#FAFAF4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #FAFAF4; color: #2D3748; font-family: system-ui, -apple-system, sans-serif; }
+    .pastel-card { background: #FFFFFF; border: 2px solid #F1F5F9; box-shadow: 0 10px 25px -5px rgba(255, 204, 128, 0.15); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-6">
+
+  <div class="max-w-3xl w-full space-y-6">
+    <!-- Header -->
+    <header class="pastel-card p-6 rounded-3xl text-center bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100">
+      <h1 class="text-2xl font-extrabold text-slate-800 mb-2">
+        <i class="fa-solid fa-language text-amber-600 mr-2"></i>中翻英思考直覺特訓
+      </h1>
+      <p class="text-sm text-slate-600 font-medium">針對中文反應不過來設計：先看中文提示，再進行單詞組裝或全句翻譯！</p>
+    </header>
+
+    <!-- 頁籤導覽 -->
+    <div class="flex gap-3 bg-white p-2 rounded-2xl pastel-card">
+      <button id="tab-learn-btn" onclick="switchTab('learn')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all bg-amber-100 text-amber-900 shadow-sm">
+        📖 中文優先文法解析
+      </button>
+      <button id="tab-quiz-btn" onclick="switchTab('quiz')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all text-slate-600 hover:bg-slate-100">
+        ✍️ 中翻英雙模式特訓
+      </button>
+    </div>
+
+    <!-- 學習模式區塊 -->
+    <section id="learn-section" class="space-y-4">
+      <div id="learn-cards-container"></div>
+    </section>
+
+    <!-- 測驗模式區塊 -->
+    <section id="quiz-section" class="hidden space-y-4">
+      <div class="pastel-card p-6 rounded-3xl space-y-6">
+        <!-- 模式切換 -->
+        <div class="flex gap-2 bg-amber-50 p-1.5 rounded-2xl border border-amber-100">
+          <button id="mode-a-btn" onclick="setQuizMode('A')" class="flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white text-slate-800 shadow-sm">
+            版本 A：單詞點擊組裝
+          </button>
+          <button id="mode-b-btn" onclick="setQuizMode('B')" class="flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl text-slate-600">
+            版本 B：整句中翻英打字
+          </button>
+        </div>
+
+        <div class="flex justify-between items-center text-xs font-bold text-slate-500">
+          <span id="quiz-progress">進度：1 / 6</span>
+          <span id="quiz-score">得分：0</span>
+        </div>
+
+        <!-- 中文提示框 -->
+        <div class="p-5 rounded-2xl bg-orange-50 border border-orange-100 text-center">
+          <div class="text-xs font-bold text-amber-800 mb-1">請將下列中文翻譯成英文：</div>
+          <div id="quiz-cn-title" class="text-lg sm:text-xl font-extrabold text-slate-800">載入中...</div>
+        </div>
+
+        <!-- 版本 A UI -->
+        <div id="quiz-mode-a-area" class="space-y-4">
+          <div id="answer-zone" onclick="resetAnswerZone()" class="min-h-[60px] p-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-wrap gap-2 items-center justify-center cursor-pointer">
+            <span class="text-xs text-slate-400 font-bold">點擊下方單詞拼湊句子（點擊此處可清空重選）</span>
+          </div>
+          <div id="word-pool" class="flex flex-wrap gap-2 justify-center"></div>
+        </div>
+
+        <!-- 版本 B UI -->
+        <div id="quiz-mode-b-area" class="hidden space-y-3">
+          <input type="text" id="type-b-input" placeholder="請在此輸入英文翻譯..." autocomplete="off"
+            class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm font-bold font-mono">
+        </div>
+
+        <!-- 回饋訊息 -->
+        <div id="feedback-box" class="hidden p-4 rounded-2xl text-sm font-bold"></div>
+
+        <!-- 操作按鈕 -->
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button onclick="showHint()" class="px-5 py-2.5 rounded-xl font-bold text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 transition-colors">
+            <i class="fa-solid fa-lightbulb mr-1"></i>查看提示
+          </button>
+          <button id="btn-submit" onclick="checkAnswer()" class="px-6 py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-amber-300 to-orange-300 text-amber-950 shadow-md">
+            檢查答案 <i class="fa-solid fa-arrow-right ml-1"></i>
+          </button>
+          <button id="btn-next" onclick="nextQuestion()" class="hidden px-6 py-2.5 rounded-xl font-bold text-xs bg-emerald-400 text-emerald-950 shadow-md">
+            下一題 <i class="fa-solid fa-angle-right ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const grammarData = [
+      { id: 1, cn: "自從他六歲以來，這些綿羊就一直由他飼養著，不是嗎？", en: "The sheep have been raised by him since he was six, haven't they?", words: ["The sheep", "have been raised", "by him", "since", "he was six,", "haven't they?"], grammar: ["主詞綿羊 sheep 單複數同形，由 have 判斷為複數。", "現在完成式被動語態：have been raised。", "since 引導時間子句用過去式 was。", "肯定主句搭配否定附加問句 haven't they?"] },
+      { id: 2, cn: "台北冬天很少下雪，對吧？", en: "There is little snow in Taipei in winter, is there?", words: ["There is", "little snow", "in Taipei", "in winter,", "is there?"], grammar: ["There is 句型表有……。", "little 具備幾乎沒有的否定含意。", "主句含否定詞，附加問句使用肯定型態 is there?"] },
+      { id: 3, cn: "這台電腦今天能修好嗎？", en: "Can the computer be fixed today?", words: ["Can", "the computer", "be fixed", "today?"], grammar: ["情態助動詞疑問句：Can 置於句首。", "被動語態：Can + be + p.p. (be fixed)。"] },
+      { id: 4, cn: "那些籃子不是我奶奶上星期做的。", en: "Those baskets weren't made by my grandma last week.", words: ["Those baskets", "weren't made", "by my grandma", "last week."], grammar: ["過去簡單被動否定：weren't made。", "last week 指定過去時間點。"] },
+      { id: 5, cn: "這些律師一個月領一次薪水嗎？", en: "Are the lawyers paid once a month?", words: ["Are", "the lawyers", "paid", "once a month?"], grammar: ["現在簡單被動疑問句：Are + 主詞 + paid。", "once a month 表頻率。"] },
+      { id: 6, cn: "這個男人應該立刻被送往醫院。", en: "The man should be taken to the hospital right away.", words: ["The man", "should be taken", "to the hospital", "right away."], grammar: ["情態助動詞被動：should be taken。", "right away 意指立刻、馬上。"] }
+    ];
+
+    let currentTab = 'learn';
+    let currentMode = 'A';
+    let currentIndex = 0;
+    let score = 0;
+    let selectedWords = [];
+
+    document.addEventListener('DOMContentLoaded', () => { renderLearnCards(); });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const learnSec = document.getElementById('learn-section');
+      const quizSec = document.getElementById('quiz-section');
+      const learnBtn = document.getElementById('tab-learn-btn');
+      const quizBtn = document.getElementById('tab-quiz-btn');
+
+      if (tab === 'learn') {
+        learnSec.classList.remove('hidden');
+        quizSec.classList.add('hidden');
+        learnBtn.className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all bg-amber-100 text-amber-900 shadow-sm";
+        quizBtn.className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all text-slate-600 hover:bg-slate-100";
+      } else {
+        learnSec.classList.add('hidden');
+        quizSec.classList.remove('hidden');
+        quizBtn.className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all bg-orange-100 text-amber-900 shadow-sm";
+        learnBtn.className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all text-slate-600 hover:bg-slate-100";
+        loadQuiz();
+      }
+    }
+
+    function renderLearnCards() {
+      const container = document.getElementById('learn-cards-container');
+      container.innerHTML = grammarData.map(item => `
+        <div class="pastel-card p-6 rounded-3xl space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-extrabold px-3 py-1 rounded-full bg-yellow-100 text-amber-900">例句 #0${item.id}</span>
+            <button onclick="speak('${item.en.replace(/'/g, "\\'")}')" class="w-9 h-9 rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors flex items-center justify-center">
+              <i class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+          </div>
+          <div class="text-base font-extrabold text-slate-800 bg-orange-50 p-3.5 rounded-2xl border border-orange-100">
+            🇨🇳 ${item.cn}
+          </div>
+          <div class="text-sm font-bold text-sky-700">
+            🇬🇧 ${item.en}
+          </div>
+          <ul class="space-y-1.5 pt-2 border-t border-slate-100 text-xs text-slate-600 font-medium">
+            ${item.grammar.map(g => `<li>• ${g}</li>`).join('')}
+          </ul>
+        </div>
+      `).join('');
+    }
+
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US';
+        window.speechSynthesis.speak(u);
+      }
+    }
+
+    function setQuizMode(mode) {
+      currentMode = mode;
+      document.getElementById('mode-a-btn').className = `flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl ${mode === 'A' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`;
+      document.getElementById('mode-b-btn').className = `flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl ${mode === 'B' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`;
+      document.getElementById('quiz-mode-a-area').style.display = mode === 'A' ? 'block' : 'none';
+      document.getElementById('quiz-mode-b-area').style.display = mode === 'B' ? 'block' : 'none';
+      resetQuizState();
+    }
+
+    function loadQuiz() {
+      const q = grammarData[currentIndex];
+      document.getElementById('quiz-progress').innerText = `進度：${currentIndex + 1} / ${grammarData.length}`;
+      document.getElementById('quiz-score').innerText = `得分：${score}`;
+      document.getElementById('quiz-cn-title').innerText = q.cn;
+      resetQuizState();
+
+      if (currentMode === 'A') {
+        const shuffled = [...q.words].sort(() => Math.random() - 0.5);
+        document.getElementById('word-pool').innerHTML = shuffled.map(w => `
+          <button onclick="selectWord(this, '${w}')" class="px-3.5 py-1.5 rounded-xl bg-sky-50 text-sky-900 text-xs font-bold hover:bg-sky-100 transition-colors shadow-sm">
+            ${w}
+          </button>
+        `).join('');
+      }
+    }
+
+    function selectWord(btn, word) {
+      btn.style.display = 'none';
+      selectedWords.push({ word, btn });
+      updateAnswerZone();
+    }
+
+    function updateAnswerZone() {
+      const zone = document.getElementById('answer-zone');
+      if (selectedWords.length === 0) {
+        zone.innerHTML = `<span class="text-xs text-slate-400 font-bold">點擊下方單詞拼湊句子（點擊此處可清空重選）</span>`;
+      } else {
+        zone.innerHTML = selectedWords.map(i => `
+          <span class="px-3 py-1.5 rounded-xl bg-amber-200 text-amber-950 text-xs font-bold shadow-sm">${i.word}</span>
+        `).join('');
+      }
+    }
+
+    function resetAnswerZone() {
+      selectedWords.forEach(i => i.btn.style.display = 'inline-block');
+      selectedWords = [];
+      updateAnswerZone();
+    }
+
+    function resetQuizState() {
+      selectedWords = [];
+      updateAnswerZone();
+      document.getElementById('type-b-input').value = '';
+      const fb = document.getElementById('feedback-box');
+      fb.className = 'hidden p-4 rounded-2xl text-sm font-bold';
+      fb.innerText = '';
+      document.getElementById('btn-submit').classList.remove('hidden');
+      document.getElementById('btn-next').classList.add('hidden');
+    }
+
+    function checkAnswer() {
+      const q = grammarData[currentIndex];
+      let userAns = currentMode === 'A' ? selectedWords.map(i => i.word).join(' ') : document.getElementById('type-b-input').value.trim();
+
+      const cleanUser = userAns.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cleanTarget = q.en.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      const fb = document.getElementById('feedback-box');
+      fb.classList.remove('hidden');
+
+      if (cleanUser === cleanTarget) {
+        fb.className = "p-4 rounded-2xl text-sm font-bold bg-emerald-100 text-emerald-900 border border-emerald-200";
+        fb.innerHTML = `🎉 太棒了！回答完全正確！`;
+        score += 15;
+        document.getElementById('quiz-score').innerText = `得分：${score}`;
+        document.getElementById('btn-submit').classList.add('hidden');
+        document.getElementById('btn-next').classList.remove('hidden');
+        speak(q.en);
+      } else {
+        fb.className = "p-4 rounded-2xl text-sm font-bold bg-rose-100 text-rose-900 border border-rose-200";
+        fb.innerHTML = `❌ 答案有誤，再試一次或點擊提示看看！`;
+      }
+    }
+
+    function showHint() {
+      const q = grammarData[currentIndex];
+      const fb = document.getElementById('feedback-box');
+      fb.classList.remove('hidden');
+      fb.className = "p-4 rounded-2xl text-sm font-bold bg-amber-100 text-amber-900 border border-amber-200";
+      fb.innerHTML = `💡 正確英文句型：${q.en}`;
+    }
+
+    function nextQuestion() {
+      currentIndex = (currentIndex + 1) % grammarData.length;
+      loadQuiz();
+    }
+  </script>
+</body>
+</html>

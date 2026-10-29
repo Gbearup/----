@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>極致英檢文法精霸 & 互動測驗系統</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind Configuration with Pastel Palette -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // Bright Pastel Color Palette
+            pastel: {
+              yellow: '#FFF59D',  // 柔黃
+              yellowLight: '#FFFDE7',
+              blue: '#B3E5FC',    // 天藍
+              blueLight: '#E1F5FE',
+              orange: '#FFCC80',  // 溫暖粉橘 / 水蜜桃
+              orangeLight: '#FFE0B2',
+              pink: '#F8BBD0',    // 柔粉
+              creamBg: '#FAFAF4', // 暖色奶油白背景
+              card: '#FFFFFF',
+              textMain: '#2D3748', // 深灰深褐文字，確保高對比度
+              textMuted: '#64748B'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #FAFAF4;
+      color: #2D3748;
+    }
+
+    .pastel-card {
+      background: #FFFFFF;
+      border: 2px solid #F1F5F9;
+      box-shadow: 0 10px 25px -5px rgba(255, 204, 128, 0.15), 0 8px 10px -6px rgba(179, 229, 252, 0.2);
+    }
+
+    .pastel-card-hover {
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .pastel-card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 16px 30px -5px rgba(255, 204, 128, 0.3), 0 10px 15px -5px rgba(179, 229, 252, 0.3);
+      border-color: #FFE0B2;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FAFAF4;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #FFCC80;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-pastel-orangeLight selection:text-slate-800">
+
+  <!-- Soft pastel decorative background blur blobs -->
+  <div class="fixed top-0 left-10 w-80 h-80 bg-pastel-yellow/50 rounded-full blur-[90px] pointer-events-none"></div>
+  <div class="fixed top-1/3 right-10 w-96 h-96 bg-pastel-blue/50 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="fixed bottom-10 left-1/3 w-80 h-80 bg-pastel-orange/40 rounded-full blur-[90px] pointer-events-none"></div>
+
+  <!-- Header Navigation -->
+  <header class="sticky top-0 z-50 border-b border-orange-100/80 bg-white/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pastel-orange to-pastel-yellow flex items-center justify-center text-slate-800 shadow-md shadow-orange-200">
+          <i class="fa-solid font-bold fa-graduation-cap text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg leading-tight text-slate-800">
+            GrammarMaster <span class="text-xs px-2 py-0.5 rounded-full bg-pastel-yellow text-amber-900 font-semibold">粉彩限定版</span>
+          </h1>
+          <p class="text-xs text-slate-500 font-medium">英語被動語態與文法特訓</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex p-1 bg-amber-50/80 rounded-2xl border border-amber-100">
+        <button id="nav-review" onclick="switchTab('review')" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-800 bg-white shadow-sm border border-orange-100">
+          <i class="fa-solid fa-book-open mr-1.5 text-amber-500"></i>文法解析
+        </button>
+        <button id="nav-quiz" onclick="switchTab('quiz')" class="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-600 hover:text-slate-900">
+          <i class="fa-solid fa-pen-to-square mr-1.5 text-sky-400"></i>挑戰測驗
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 bg-slate-800 text-white px-5 py-3.5 rounded-2xl shadow-xl">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-pastel-yellow"></i>
+      <span id="toast-message" class="text-sm font-bold">提示訊息</span>
+    </div>
+
+    <!-- MODULE 1: Grammar Review -->
+    <section id="review-section" class="space-y-6">
+      <!-- Section Banner -->
+      <div class="pastel-card p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-gradient-to-r from-pastel-yellowLight via-white to-pastel-blueLight border-orange-100">
+        <div class="relative z-10 max-w-2xl">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-pastel-orange/40 text-amber-900 mb-3 border border-orange-200">
+            <i class="fa-solid fa-lightbulb text-amber-600"></i> 手寫筆記複習 & 文法精析
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">核心句型完整拆解</h2>
+          <p class="mt-2 text-sm sm:text-base text-slate-600 font-medium">
+            針對試題重點進行文法結構剖析，涵蓋被動語態、附加問句與特殊主詞用法。點擊語音圖示可收聽標準美式發音。
+          </p>
+        </div>
+        <div class="absolute -right-6 -bottom-10 opacity-20 pointer-events-none">
+          <i class="fa-solid fa-language text-[200px] text-amber-500"></i>
+        </div>
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Cards injected dynamically via JavaScript -->
+      </div>
+    </section>
+
+    <!-- MODULE 2: Interactive Quiz App -->
+    <section id="quiz-section" class="hidden space-y-6">
+      
+      <!-- Quiz Header / Progress Bar -->
+      <div class="pastel-card p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 border-amber-100 bg-gradient-to-r from-pastel-blueLight/60 to-white">
+        <div>
+          <span class="text-xs font-extrabold uppercase tracking-wider text-sky-600 bg-sky-100 px-2.5 py-0.5 rounded-full">Practice Mode</span>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 mt-1">互動文法測驗</h2>
+        </div>
+
+        <div id="quiz-stats" class="w-full md:w-auto flex items-center gap-6 justify-between md:justify-end">
+          <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-sky-100 shadow-sm">
+            <span class="text-xs text-slate-500 font-bold">當前進度</span>
+            <span id="quiz-progress-text" class="text-sm font-extrabold text-sky-600">1 / 6</span>
+          </div>
+          <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-amber-100 shadow-sm">
+            <span class="text-xs text-slate-500 font-bold">得分</span>
+            <span id="quiz-score-text" class="text-sm font-extrabold text-amber-600">0 分</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Line -->
+      <div class="w-full bg-slate-200/80 rounded-full h-3 overflow-hidden p-0.5">
+        <div id="quiz-progress-bar" class="bg-gradient-to-r from-pastel-orange via-amber-300 to-sky-300 h-2 rounded-full transition-all duration-500 w-0"></div>
+      </div>
+
+      <!-- Main Quiz Container -->
+      <div id="quiz-card-wrapper">
+        <div id="quiz-card" class="pastel-card p-6 sm:p-8 rounded-3xl space-y-6 relative border-orange-100">
+          <!-- Question Type Badge -->
+          <div class="flex items-center justify-between">
+            <span id="question-type" class="px-3 py-1 rounded-full text-xs font-bold bg-pastel-yellow text-amber-900 border border-yellow-200">
+              題型：單選題
+            </span>
+            <span id="question-num" class="text-xs text-slate-400 font-bold tracking-wider">QUESTION 01</span>
+          </div>
+
+          <!-- Question Content -->
+          <div>
+            <h3 id="question-title" class="text-lg sm:text-xl font-extrabold text-slate-800 leading-relaxed">
+              題目載入中...
+            </h3>
+            <p id="question-sub" class="text-sm text-slate-500 font-medium mt-1">請選擇正確的文法選項填入空格中。</p>
+          </div>
+
+          <!-- Interactive Area -->
+          <div id="interactive-area" class="space-y-3 pt-2">
+            <!-- Dynamic quiz input UI -->
+          </div>
+
+          <!-- Feedback Box -->
+          <div id="feedback-box" class="hidden p-4 rounded-2xl border transition-all duration-300">
+            <div class="flex items-start gap-3">
+              <i id="feedback-icon" class="fa-solid text-xl mt-0.5"></i>
+              <div class="space-y-1">
+                <h4 id="feedback-title" class="font-extrabold text-sm">解析回饋</h4>
+                <p id="feedback-detail" class="text-xs sm:text-sm leading-relaxed font-medium"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex justify-end pt-4 border-t border-slate-100">
+            <button id="btn-submit" onclick="submitAnswer()" class="px-6 py-3 rounded-2xl font-bold text-sm bg-gradient-to-r from-pastel-orange to-amber-300 hover:from-amber-300 hover:to-pastel-orange text-amber-950 shadow-md shadow-orange-200 transition-all flex items-center gap-2">
+              確認答案 <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+            <button id="btn-next" onclick="nextQuestion()" class="hidden px-6 py-3 rounded-2xl font-bold text-sm bg-gradient-to-r from-emerald-300 to-teal-300 hover:opacity-90 text-teal-950 shadow-md transition-all flex items-center gap-2">
+              下一題 <i class="fa-solid fa-angle-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz Summary Modal / Card -->
+      <div id="quiz-summary" class="hidden pastel-card p-8 rounded-3xl text-center space-y-6 max-w-2xl mx-auto border-orange-100 bg-gradient-to-b from-white via-pastel-yellowLight/30 to-white">
+        <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-pastel-yellow via-pastel-orange to-pastel-blue flex items-center justify-center text-amber-900 text-3xl shadow-lg shadow-orange-200">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-extrabold text-slate-800">測驗完成！</h3>
+          <p class="text-sm text-slate-500 font-medium mt-1">恭喜您完成英語被動語態特訓測驗</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 py-4 border-y border-slate-100">
+          <div class="bg-pastel-yellowLight p-4 rounded-2xl border border-yellow-100">
+            <div class="text-xs text-amber-800 font-bold mb-1">最終得分</div>
+            <div id="summary-score" class="text-3xl font-extrabold text-amber-600">0 / 100</div>
+          </div>
+          <div class="bg-pastel-blueLight p-4 rounded-2xl border border-sky-100">
+            <div class="text-xs text-sky-800 font-bold mb-1">答對率</div>
+            <div id="summary-accuracy" class="text-3xl font-extrabold text-sky-600">0%</div>
+          </div>
+        </div>
+
+        <p id="summary-feedback" class="text-sm font-bold text-slate-700 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          評語分析中...
+        </p>
+
+        <div class="flex justify-center gap-4">
+          <button onclick="restartQuiz()" class="px-6 py-3 rounded-2xl font-bold text-sm bg-gradient-to-r from-pastel-orange to-amber-300 text-amber-950 shadow-md transition-all flex items-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i> 重新測驗
+          </button>
+          <button onclick="switchTab('review')" class="px-6 py-3 rounded-2xl font-bold text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-book-open"></i> 回到複習
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200/60 py-6 mt-12 text-center text-xs text-slate-500 font-medium">
+    <p>© GrammarMaster Interactive Learning System • 明亮粉彩特訓版</p>
+  </footer>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // --- Data Definitions ---
+    const grammarData = [
+      {
+        id: 1,
+        sentence: "The sheep have been raised by him since he was six, haven't they?",
+        translation: "自從他六歲以來，這些綿羊就一直由他飼養著，不是嗎？",
+        grammarPoints: [
+          { tag: "單複數同形", detail: "sheep 作為「綿羊」時單複數同形。此處動詞搭配 have，可知為複數概念。" },
+          { tag: "完成式被動", detail: "have been raised（已經被飼養），結合完成式（have + p.p.）與被動語態（be + p.p.）。" },
+          { tag: "since 子句", detail: "since（自從）引導時間副詞子句，主要子句用現在完成式，since 子句動詞用過去式（was）。" },
+          { tag: "否定附加問句", detail: "主要子句為肯定句時，附加問句需用否定型態 haven't they?。" }
+        ],
+        tags: ["現在完成式", "被動語態", "附加問句", "不規則名詞"]
+      },
+      {
+        id: 2,
+        sentence: "There is little snow in Taipei in winter, is there?",
+        translation: "台北冬天很少下雪，對吧？",
+        grammarPoints: [
+          { tag: "There is/are 句型", detail: "表示「有……」，後接不可數名詞 snow 用單數動詞 is。" },
+          { tag: "little 否定意涵", detail: "little 意為「幾乎沒有」（具否定意涵），不同於 a little（有一些，肯定意涵）。" },
+          { tag: "肯定附加問句", detail: "因主句含有否定詞 little，整句視為否定句，因此附加問句需用肯定式 is there?。" }
+        ],
+        tags: ["There is/are", "否定詞 little", "附加問句"]
+      },
+      {
+        id: 3,
+        sentence: "Can the computer be fixed today?",
+        translation: "這台電腦今天能修好嗎？",
+        grammarPoints: [
+          { tag: "情態助動詞疑問句", detail: "將助動詞 Can 置於句首形成一般疑問句。" },
+          { tag: "助動詞被動語態", detail: "情態助動詞（Can）後面接原形被動式 be + p.p.（be fixed）。" },
+          { tag: "時間副詞", detail: "today 放於句尾作時間修飾。" }
+        ],
+        tags: ["情態助動詞", "被動語態", "疑問句"]
+      },
+      {
+        id: 4,
+        sentence: "Those baskets weren't made by my grandma last week.",
+        translation: "那些籃子不是我奶奶上星期做的。",
+        grammarPoints: [
+          { tag: "過去簡單被動否定", detail: "主詞 Those baskets 為複數，過去式被動否定使用 weren't made (were + not + p.p.)。" },
+          { tag: "動作執行者", detail: "by + my grandma 表明動作由誰執行。" },
+          { tag: "過去時間點", detail: "last week 指定過去具體時間，需搭配過去時態。" }
+        ],
+        tags: ["過去簡單式", "被動語態否定", "時間副詞"]
+      },
+      {
+        id: 5,
+        sentence: "Are the lawyers paid once a month?",
+        translation: "這些律師一個月支薪一次嗎？",
+        grammarPoints: [
+          { tag: "現在簡單被動疑問", detail: "主詞 the lawyers 為複數，將 be 動詞 Are 提至句首構成分句疑問句（Are ... paid）。" },
+          { tag: "頻率副詞片語", detail: "once a month 表示「一個月一次」，常用於描述定期發生的習慣或狀態。" }
+        ],
+        tags: ["現在簡單式", "被動語態", "頻率表達"]
+      },
+      {
+        id: 6,
+        sentence: "The man should be taken to the hospital right away.",
+        translation: "這個男人應該立刻被送往醫院。",
+        grammarPoints: [
+          { tag: "情態助動詞被動", detail: "should（應該）後接原形被動 be taken（被帶/送）。" },
+          { tag: "介系詞片語", detail: "to the hospital（到醫院），指明地點與方向。" },
+          { tag: "片語 right away", detail: "意為「立刻、馬上」，等於 immediately 或 at once。" }
+        ],
+        tags: ["情態助動詞", "被動語態", "實用片語"]
+      }
+    ];
+
+    const quizQuestions = [
+      {
+        id: 1,
+        type: "single",
+        typeName: "單選題",
+        question: "The sheep ________ by him since he was six, haven't they?",
+        options: [
+          "has been raised",
+          "have been raised",
+          "were raised",
+          "are raised"
+        ],
+        correct: 1,
+        explanation: "1. sheep 作複數概念（由附加問句 haven't they? 可推知）；2. 句中有 since he was six，主要子句必須使用現在完成式，故選 have been raised。"
+      },
+      {
+        id: 2,
+        type: "single",
+        typeName: "單選題",
+        question: "There is little snow in Taipei in winter, ________?",
+        options: [
+          "isn't there",
+          "is there",
+          "hasn't there",
+          "doesn't it"
+        ],
+        correct: 1,
+        explanation: "little 表示「幾乎沒有」，屬於否定詞，因此主要子句被視為否定句。附加問句需用肯定形式 is there?。"
+      },
+      {
+        id: 3,
+        type: "reorder",
+        typeName: "重組題",
+        question: "請將下列詞組重組成正確句子：",
+        sub: "「這台電腦今天能修好嗎？」",
+        words: ["fixed today?", "Can", "the computer", "be"],
+        correctOrder: ["Can", "the computer", "be", "fixed today?"],
+        explanation: "情態助動詞疑問句結構：Can + 主詞 (the computer) + be + p.p. (fixed) + 時間 (today)?"
+      },
+      {
+        id: 4,
+        type: "fill",
+        typeName: "填空題",
+        question: "Those baskets ________ (not / make) by my grandma last week.",
+        hint: "請填入提示動詞的正確被動時態 (兩個英文單字，縮寫形式)",
+        correctAnswer: "weren't made",
+        altAnswers: ["were not made"],
+        explanation: "句尾有過去時間 last week，且主詞 Those baskets 為複數，否定被動寫法為 weren't made (或 were not made)。"
+      },
+      {
+        id: 5,
+        type: "single",
+        typeName: "單選題",
+        question: "Are the lawyers ________ once a month?",
+        options: [
+          "pay",
+          "paying",
+          "paid",
+          "to pay"
+        ],
+        correct: 2,
+        explanation: "本句為被動語態疑問句，Are + 主詞 + 過去分詞 (paid)，表示「律師們有被發薪水嗎？」。"
+      },
+      {
+        id: 6,
+        type: "single",
+        typeName: "單選題",
+        question: "The man should ________ to the hospital right away.",
+        options: [
+          "be taken",
+          "take",
+          "being taken",
+          "is taken"
+        ],
+        correct: 0,
+        explanation: "情態助動詞 should 後面需接動詞原形。被動語態結構為 should + be + p.p. (taken)。"
+      }
+    ];
+
+    // --- State Management ---
+    let currentQuizIndex = 0;
+    let score = 0;
+    let userAnswers = [];
+    let selectedWordStack = [];
+    let isAnswerSubmitted = false;
+
+    // --- Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+      renderReviewCards();
+      initQuizQuestion();
+    });
+
+    // --- Tab Switcher ---
+    function switchTab(tab) {
+      const reviewSec = document.getElementById('review-section');
+      const quizSec = document.getElementById('quiz-section');
+      const navReview = document.getElementById('nav-review');
+      const navQuiz = document.getElementById('nav-quiz');
+
+      if (tab === 'review') {
+        reviewSec.classList.remove('hidden');
+        quizSec.classList.add('hidden');
+        navReview.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-800 bg-white shadow-sm border border-orange-100";
+        navQuiz.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-600 hover:text-slate-900";
+      } else {
+        reviewSec.classList.add('hidden');
+        quizSec.classList.remove('hidden');
+        navQuiz.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-800 bg-white shadow-sm border border-orange-100";
+        navReview.className = "px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-600 hover:text-slate-900";
+      }
+    }
+
+    // --- Text-to-Speech (Web Speech API) ---
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+        showToast('發音朗讀中...', 'volume-high');
+      } else {
+        showToast('您的瀏覽器不支援語音朗讀功能', 'triangle-exclamation');
+      }
+    }
+
+    // --- Toast Notification Helper ---
+    function showToast(msg, iconName = 'circle-check') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      const toastIcon = document.getElementById('toast-icon');
+
+      toastMsg.innerText = msg;
+      toastIcon.className = `fa-solid fa-${iconName} text-pastel-yellow`;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // --- Render Review Cards ---
+    function renderReviewCards() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = grammarData.map(item => `
+        <div class="pastel-card pastel-card-hover p-6 rounded-3xl flex flex-col justify-between space-y-4 relative group">
+          
+          <div class="space-y-3">
+            <!-- Header Tag & Audio Button -->
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold tracking-wider text-amber-900 uppercase bg-pastel-yellow px-3 py-1 rounded-full border border-yellow-200">
+                Sentence #0${item.id}
+              </span>
+              <button onclick="speakText('${item.sentence.replace(/'/g, "\\'")}')" 
+                      class="w-10 h-10 rounded-2xl bg-pastel-blueLight hover:bg-pastel-blue transition-colors flex items-center justify-center text-sky-800"
+                      title="播放發音">
+                <i class="fa-solid fa-volume-high text-sm"></i>
+              </button>
+            </div>
+
+            <!-- English Sentence -->
+            <h3 class="text-lg font-extrabold text-slate-800 leading-snug">
+              ${item.sentence}
+            </h3>
+
+            <!-- Translation -->
+            <p class="text-sm font-bold text-slate-600 border-l-4 border-pastel-orange pl-3 py-0.5">
+              ${item.translation}
+            </p>
+          </div>
+
+          <!-- Expandable Grammar Details -->
+          <div class="pt-2 border-t border-slate-100">
+            <details class="group/details">
+              <summary class="cursor-pointer text-xs font-bold text-amber-800 flex items-center justify-between py-1 select-none">
+                <span><i class="fa-solid fa-magnifying-glass-chart mr-1.5 text-amber-500"></i>查看文法要點剖析</span>
+                <i class="fa-solid fa-chevron-down group-open/details:rotate-180 transition-transform text-xs"></i>
+              </summary>
+              <div class="mt-3 space-y-2.5 pt-2">
+                ${item.grammarPoints.map(pt => `
+                  <div class="bg-pastel-yellowLight p-3 rounded-2xl border border-yellow-100/80">
+                    <span class="inline-block text-[11px] font-extrabold text-amber-900 bg-pastel-yellow px-2 py-0.5 rounded-md mr-1.5 border border-yellow-200">
+                      ${pt.tag}
+                    </span>
+                    <span class="text-xs text-slate-700 font-medium leading-relaxed">
+                      ${pt.detail}
+                    </span>
+                  </div>
+                `).join('')}
+              </div>
+            </details>
+          </div>
+
+          <!-- Category Tags -->
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            ${item.tags.map(t => `
+              <span class="text-[10px] font-bold text-sky-700 bg-pastel-blueLight px-2.5 py-0.5 rounded-full">#${t}</span>
+            `).join('')}
+          </div>
+
+        </div>
+      `).join('');
+    }
+
+    // --- QUIZ ENGINE LOGIC ---
+
+    function initQuizQuestion() {
+      const q = quizQuestions[currentQuizIndex];
+      isAnswerSubmitted = false;
+
+      // Update Header Stats
+      document.getElementById('quiz-progress-text').innerText = `${currentQuizIndex + 1} / ${quizQuestions.length}`;
+      document.getElementById('quiz-score-text').innerText = `${score} 分`;
+      
+      const progressPercent = ((currentQuizIndex) / quizQuestions.length) * 100;
+      document.getElementById('quiz-progress-bar').style.width = `${progressPercent}%`;
+
+      // Update Question Card UI
+      document.getElementById('question-type').innerText = `題型：${q.typeName}`;
+      document.getElementById('question-num').innerText = `QUESTION 0${q.id}`;
+      document.getElementById('question-title').innerText = q.question;
+      document.getElementById('question-sub').innerText = q.sub || "請選擇或填寫正確答案完成文法句型：";
+
+      // Reset feedback box & buttons
+      const feedbackBox = document.getElementById('feedback-box');
+      feedbackBox.className = "hidden p-4 rounded-2xl border transition-all duration-300";
+      document.getElementById('btn-submit').classList.remove('hidden');
+      document.getElementById('btn-next').classList.add('hidden');
+
+      // Render Question Area based on type
+      const area = document.getElementById('interactive-area');
+      area.innerHTML = '';
+
+      if (q.type === 'single') {
+        area.innerHTML = q.options.map((opt, idx) => `
+          <label class="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200 hover:border-amber-300 bg-white hover:bg-pastel-yellowLight/50 cursor-pointer transition-all">
+            <input type="radio" name="quiz-option" value="${idx}" class="w-4 h-4 text-amber-500 focus:ring-amber-400">
+            <span class="text-sm font-bold text-slate-800">${opt}</span>
+          </label>
+        `).join('');
+      } else if (q.type === 'fill') {
+        area.innerHTML = `
+          <div class="space-y-2">
+            <input type="text" id="fill-input" placeholder="請在此輸入答案..." 
+              class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-400 font-mono">
+            <p class="text-xs text-slate-500 font-medium">${q.hint || ''}</p>
+          </div>
+        `;
+      } else if (q.type === 'reorder') {
+        selectedWordStack = [];
+        renderReorderUI();
+      }
+    }
+
+    function renderReorderUI() {
+      const q = quizQuestions[currentQuizIndex];
+      const area = document.getElementById('interactive-area');
+
+      const availableWords = q.words.filter(w => !selectedWordStack.includes(w));
+
+      area.innerHTML = `
+        <div class="space-y-4">
+          <!-- Result Container -->
+          <div class="min-h-[56px] p-3 rounded-2xl border-2 border-dashed border-amber-200 bg-pastel-yellowLight/40 flex flex-wrap gap-2 items-center">
+            ${selectedWordStack.length === 0 
+              ? `<span class="text-xs text-slate-400 font-bold italic">點擊下方詞塊組裝句子...</span>`
+              : selectedWordStack.map((w, i) => `
+                <button onclick="removeWordFromReorder(${i})" class="px-3.5 py-1.5 rounded-xl bg-pastel-orange text-amber-950 text-xs font-bold shadow-sm hover:bg-amber-300 transition-colors flex items-center gap-1.5">
+                  ${w} <i class="fa-solid fa-xmark text-[10px]"></i>
+                </button>
+              `).join('')
+            }
+          </div>
+
+          <!-- Pool of words -->
+          <div class="flex flex-wrap gap-2 pt-1">
+            ${availableWords.map(w => `
+              <button onclick="addWordToReorder('${w}')" class="px-3.5 py-1.5 rounded-xl bg-pastel-blueLight hover:bg-pastel-blue text-xs font-bold text-sky-900 transition-colors">
+                ${w}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function addWordToReorder(word) {
+      if (isAnswerSubmitted) return;
+      selectedWordStack.push(word);
+      renderReorderUI();
+    }
+
+    function removeWordFromReorder(index) {
+      if (isAnswerSubmitted) return;
+      selectedWordStack.splice(index, 1);
+      renderReorderUI();
+    }
+
+    function submitAnswer() {
+      if (isAnswerSubmitted) return;
+
+      const q = quizQuestions[currentQuizIndex];
+      let isCorrect = false;
+      let userAnsDisplay = "";
+
+      if (q.type === 'single') {
+        const selected = document.querySelector('input[name="quiz-option"]:checked');
+        if (!selected) {
+          showToast('請先選擇一個答案！', 'triangle-exclamation');
+          return;
+        }
+        const val = parseInt(selected.value);
+        isCorrect = (val === q.correct);
+        userAnsDisplay = q.options[val];
+      } else if (q.type === 'fill') {
+        const input = document.getElementById('fill-input').value.trim();
+        if (!input) {
+          showToast('請輸入答案！', 'triangle-exclamation');
+          return;
+        }
+        userAnsDisplay = input;
+        const normalized = input.toLowerCase();
+        isCorrect = (normalized === q.correctAnswer.toLowerCase() || (q.altAnswers && q.altAnswers.includes(normalized)));
+      } else if (q.type === 'reorder') {
+        if (selectedWordStack.length !== q.words.length) {
+          showToast('請將所有單字組裝完畢！', 'triangle-exclamation');
+          return;
+        }
+        userAnsDisplay = selectedWordStack.join(' ');
+        isCorrect = JSON.stringify(selectedWordStack) === JSON.stringify(q.correctOrder);
+      }
+
+      isAnswerSubmitted = true;
+
+      if (isCorrect) {
+        score += Math.round(100 / quizQuestions.length);
+        document.getElementById('quiz-score-text').innerText = `${score} 分`;
+      }
+
+      userAnswers.push({
+        questionId: q.id,
+        isCorrect,
+        userAnsDisplay
+      });
+
+      // Show Feedback Box
+      const feedbackBox = document.getElementById('feedback-box');
+      const feedbackTitle = document.getElementById('feedback-title');
+      const feedbackDetail = document.getElementById('feedback-detail');
+      const feedbackIcon = document.getElementById('feedback-icon');
+
+      feedbackBox.classList.remove('hidden');
+
+      if (isCorrect) {
+        feedbackBox.className = "p-4 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-950 transition-all duration-300";
+        feedbackIcon.className = "fa-solid fa-circle-check text-emerald-500 text-lg mt-0.5";
+        feedbackTitle.innerText = "完全正確！答得太棒了！";
+      } else {
+        feedbackBox.className = "p-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-950 transition-all duration-300";
+        feedbackIcon.className = "fa-solid fa-circle-xmark text-rose-500 text-lg mt-0.5";
+        feedbackTitle.innerText = "回答有誤喔，加油！";
+      }
+
+      feedbackDetail.innerHTML = `
+        <div class="space-y-1">
+          <div><strong class="font-bold">解析：</strong>${q.explanation}</div>
+        </div>
+      `;
+
+      document.getElementById('btn-submit').classList.add('hidden');
+      document.getElementById('btn-next').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQuizIndex++;
+      if (currentQuizIndex < quizQuestions.length) {
+        initQuizQuestion();
+      } else {
+        showQuizSummary();
+      }
+    }
+
+    function showQuizSummary() {
+      document.getElementById('quiz-progress-bar').style.width = '100%';
+
+      document.getElementById('quiz-card-wrapper').classList.add('hidden');
+      document.getElementById('quiz-stats').classList.add('hidden');
+      
+      const summaryCard = document.getElementById('quiz-summary');
+      summaryCard.classList.remove('hidden');
+
+      const finalScore = Math.min(100, score);
+      const accuracy = Math.round((userAnswers.filter(a => a.isCorrect).length / quizQuestions.length) * 100);
+
+      document.getElementById('summary-score').innerText = `${finalScore} / 100`;
+      document.getElementById('summary-accuracy').innerText = `${accuracy}%`;
+
+      const feedbackEl = document.getElementById('summary-feedback');
+      if (accuracy === 100) {
+        feedbackEl.innerText = "🎉 完美！您已徹底掌握這 6 大被動語態與特殊文法句型！";
+      } else if (accuracy >= 70) {
+        feedbackEl.innerText = "👍 表現相當優異！大部分被動語態與時態運用皆很紮實。";
+      } else {
+        feedbackEl.innerText = "📚 建議重溫文法卡片！特別留意『附加問句否定性』與『情態助動詞 + be + p.p.』的結構。";
+      }
+    }
+
+    function restartQuiz() {
+      currentQuizIndex = 0;
+      score = 0;
+      userAnswers = [];
+      
+      document.getElementById('quiz-card-wrapper').classList.remove('hidden');
+      document.getElementById('quiz-stats').classList.remove('hidden');
+      document.getElementById('quiz-summary').classList.add('hidden');
+
+      initQuizQuestion();
+    }
+  </script>
+</body>
+</html>

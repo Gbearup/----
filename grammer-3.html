@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>國中英文文法與中翻英特訓教室</title>
+  <style>
+    :root {
+      --bg-color: #FFFDF9;
+      --card-bg: #FFFFFF;
+      --text-main: #333333;
+      --text-sub: #666666;
+      --pink-yellow: #FFF9E6;
+      --pink-blue: #E8F4F8;
+      --pink-orange: #FFF0E5;
+      --pink-rose: #FFECF0;
+      --primary-accent: #5B82A6;
+      --success-color: #6BB280;
+      --error-color: #E26D6D;
+      --border-radius: 20px;
+      --shadow: 0 8px 24px rgba(149, 157, 165, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      max-width: 850px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      padding: 25px 20px;
+      background: linear-gradient(135deg, var(--pink-yellow), var(--pink-rose));
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 25px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      color: #4A4A4A;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: #777777;
+      font-size: 0.95rem;
+    }
+
+    /* 導覽頁籤 */
+    .nav-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 15px;
+      background-color: var(--pink-blue);
+      color: #555;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .nav-btn.active {
+      background-color: var(--pink-orange);
+      color: #333;
+      box-shadow: 0 4px 15px rgba(255, 180, 140, 0.3);
+      transform: translateY(-2px);
+    }
+
+    /* 學習卡片區塊 */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: #E2E8F0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      background-color: var(--pink-yellow);
+      color: #8A6D3B;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .audio-btn {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .audio-btn:hover {
+      background-color: var(--pink-blue);
+    }
+
+    .chinese-hint {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #2D3748;
+      margin-bottom: 12px;
+      background-color: var(--pink-orange);
+      padding: 10px 15px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+
+    .english-sentence {
+      font-size: 1.1rem;
+      color: var(--primary-accent);
+      font-weight: 600;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .grammar-list {
+      list-style-type: none;
+      background-color: #FAFAFA;
+      padding: 15px;
+      border-radius: 12px;
+      border-left: 4px solid var(--primary-accent);
+    }
+
+    .grammar-list li {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #4A5568;
+    }
+
+    .grammar-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 測驗模式選單 */
+    .quiz-mode-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      background-color: var(--pink-yellow);
+      padding: 8px;
+      border-radius: 15px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      font-weight: bold;
+      color: #666;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .mode-btn.active {
+      background-color: #FFF;
+      color: #333;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* 測驗卡片設計 */
+    .quiz-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 25px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .quiz-question-cn {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #2D3748;
+      margin-bottom: 20px;
+      background-color: var(--pink-rose);
+      padding: 15px;
+      border-radius: 15px;
+    }
+
+    /* 版本 A：組裝塊 */
+    .word-pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+      min-height: 50px;
+    }
+
+    .word-chip {
+      background-color: var(--pink-blue);
+      color: #333;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      user-select: none;
+      transition: transform 0.1s;
+    }
+
+    .word-chip:active {
+      transform: scale(0.95);
+    }
+
+    .answer-zone {
+      min-height: 55px;
+      border: 2px dashed #CBD5E0;
+      border-radius: 15px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      background-color: #FCFDFD;
+    }
+
+    /* 版本 B：整句輸入 */
+    .input-zone {
+      margin-bottom: 20px;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #E2E8F0;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .text-input:focus {
+      border-color: var(--primary-accent);
+    }
+
+    /* 按鈕區 */
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .action-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .primary-btn {
+      background-color: var(--primary-accent);
+      color: white;
+    }
+
+    .secondary-btn {
+      background-color: var(--pink-yellow);
+      color: #8A6D3B;
+    }
+
+    .action-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* 反饋訊息 */
+    .feedback {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: bold;
+      display: none;
+    }
+
+    .feedback.correct {
+      display: block;
+      background-color: #E6F4EA;
+      color: var(--success-color);
+    }
+
+    .feedback.incorrect {
+      display: block;
+      background-color: #FCE8E6;
+      color: var(--error-color);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <h1>國中英文文法與中翻英特訓</h1>
+    <p>強化中文反應英文字詞與句型的轉換能力</p>
+  </header>
+
+  <div class="nav-tabs">
+    <button class="nav-btn active" onclick="switchTab('learn')">📖 句型與文法解析</button>
+    <button class="nav-btn" onclick="switchTab('quiz')">✍️ 中翻英雙模式特訓</button>
+  </div>
+
+  <!-- 學習模式區塊 -->
+  <div id="learn-tab" class="tab-content active">
+    <div id="cards-container"></div>
+  </div>
+
+  <!-- 測驗模式區塊 -->
+  <div id="quiz-tab" class="tab-content">
+    <div class="quiz-mode-selector">
+      <button class="mode-btn active" id="mode-a-btn" onclick="setQuizMode('A')">版本 A：單詞點擊組裝</button>
+      <button class="mode-btn" id="mode-b-btn" onclick="setQuizMode('B')">版本 B：全句打字輸入</button>
+    </div>
+
+    <div class="quiz-card">
+      <div id="quiz-progress" style="color: #888; font-size: 0.9rem; margin-bottom: 10px;">進度：1 / 6</div>
+      <div class="quiz-question-cn" id="quiz-cn">題目加載中...</div>
+
+      <!-- 版本 A 畫面 -->
+      <div id="quiz-type-a">
+        <div class="answer-zone" id="answer-zone" onclick="resetAnswerZone()">
+          <span style="color: #A0AEC0; font-size: 0.9rem;" id="placeholder-tip">點擊下方單詞拼湊句子（點擊此處清空）</span>
+        </div>
+        <div class="word-pool" id="word-pool"></div>
+      </div>
+
+      <!-- 版本 B 畫面 -->
+      <div id="quiz-type-b" style="display: none;">
+        <div class="input-zone">
+          <input type="text" id="type-b-input" class="text-input" placeholder="請在此輸入英文翻譯..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="action-btn secondary-btn" onclick="showHint()">提示</button>
+        <button class="action-btn primary-btn" onclick="checkAnswer()">檢查答案</button>
+        <button class="action-btn secondary-btn" id="next-btn" onclick="nextQuestion()" style="display:none;">下一題 ➔</button>
+      </div>
+
+      <div id="feedback" class="feedback"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 核心資料庫
+  const grammarData = [
+    {
+      id: 1,
+      cn: "自從他六歲以來，這些綿羊就一直由他飼養著，不是嗎？",
+      en: "The sheep have been raised by him since he was six, haven't they?",
+      words: ["The sheep", "have been raised", "by him", "since", "he was six,", "haven't they?"],
+      grammar: [
+        "主詞與動詞：The sheep 為複數（綿羊單複數同形），搭配現在完成式被動語態 have been raised。",
+        "被動語態：by him 表示動作執行者。",
+        "時間子句：since he was six 用於指定從過去某時間點持續至今。",
+        "附加問句：前面主句為肯定，故後面附加問句使用否定 haven't they?"
+      ]
+    },
+    {
+      id: 2,
+      cn: "台北冬天很少下雪，對吧？",
+      en: "There is little snow in Taipei in winter, is there?",
+      words: ["There is", "little snow", "in Taipei", "in winter,", "is there?"],
+      grammar: [
+        "句型：There is... 表示「有……」。",
+        "否定詞：little 含有「幾乎沒有」的否定意涵。",
+        "附加問句：因句中含有否定詞 little，後方的附加問句須用肯定型態 is there?"
+      ]
+    },
+    {
+      id: 3,
+      cn: "這台電腦今天能修好嗎？",
+      en: "Can the computer be fixed today?",
+      words: ["Can", "the computer", "be fixed", "today?"],
+      grammar: [
+        "助動詞：Can（能夠）置於句首構成疑問句。",
+        "被動語態：情態助動詞 Can 後接原形被動式 be fixed（被修理）。"
+      ]
+    },
+    {
+      id: 4,
+      cn: "那些籃子不是我奶奶上星期做的。",
+      en: "Those baskets weren't made by my grandma last week.",
+      words: ["Those baskets", "weren't made", "by my grandma", "last week."],
+      grammar: [
+        "主詞：Those baskets（複數）。",
+        "過去被動否定：weren't made（沒有被製作）。",
+        "時間副詞：last week 表示過去的時間。"
+      ]
+    },
+    {
+      id: 5,
+      cn: "這些律師一個月領一次薪水嗎？",
+      en: "Are the lawyers paid once a month?",
+      words: ["Are", "the lawyers", "paid", "once a month?"],
+      grammar: [
+        "被動疑問句：將 Are 移至句首，形成 Are + 主詞 + paid（被支付薪水）。",
+        "頻率片語：once a month（一個月一次）。"
+      ]
+    },
+    {
+      id: 6,
+      cn: "這個男人應該立刻被送往醫院。",
+      en: "The man should be taken to the hospital right away.",
+      words: ["The man", "should be taken", "to the hospital", "right away."],
+      grammar: [
+        "助動詞被動：should be taken（應該被送往/帶往）。",
+        "副詞片語：right away（立刻）。"
+      ]
+    }
+  ];
+
+  let currentQuizIndex = 0;
+  let currentQuizMode = 'A';
+  let selectedWords = [];
+
+  // 渲染學習卡片
+  function renderLearnCards() {
+    const container = document.getElementById('cards-container');
+    container.innerHTML = grammarData.map(item => `
+      <div class="card">
+        <div class="card-header">
+          <span class="badge">例句 ${item.id}</span>
+          <button class="audio-btn" onclick="speak('${item.en.replace(/'/g, "\\'")}')">🔊</button>
+        </div>
+        <div class="chinese-hint">${item.cn}</div>
+        <div class="english-sentence">${item.en}</div>
+        <ul class="grammar-list">
+          ${item.grammar.map(g => `<li>• ${g}</li>`).join('')}
+        </ul>
+      </div>
+    `).join('');
+  }
+
+  // 語音朗讀功能
+  function speak(text) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  // 切換 Tab
+  function switchTab(tab) {
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+    if (tab === 'learn') {
+      document.querySelectorAll('.nav-btn')[0].classList.add('active');
+      document.getElementById('learn-tab').classList.add('active');
+    } else {
+      document.querySelectorAll('.nav-btn')[1].classList.add('active');
+      document.getElementById('quiz-tab').classList.add('active');
+      loadQuiz();
+    }
+  }
+
+  // 設定測驗模式 (A 或 B)
+  function setQuizMode(mode) {
+    currentQuizMode = mode;
+    document.getElementById('mode-a-btn').classList.toggle('active', mode === 'A');
+    document.getElementById('mode-b-btn').classList.toggle('active', mode === 'B');
+    document.getElementById('quiz-type-a').style.display = mode === 'A' ? 'block' : 'none';
+    document.getElementById('quiz-type-b').style.display = mode === 'B' ? 'block' : 'none';
+    resetQuizState();
+  }
+
+  // 載入測驗題目
+  function loadQuiz() {
+    const quiz = grammarData[currentQuizIndex];
+    document.getElementById('quiz-progress').innerText = `進度：${currentQuizIndex + 1} / ${grammarData.length}`;
+    document.getElementById('quiz-cn').innerText = quiz.cn;
+    resetQuizState();
+
+    if (currentQuizMode === 'A') {
+      // 隨機打亂單詞塊
+      const shuffled = [...quiz.words].sort(() => Math.random() - 0.5);
+      const pool = document.getElementById('word-pool');
+      pool.innerHTML = shuffled.map(w => `<span class="word-chip" onclick="selectWord(this, '${w}')">${w}</span>`).join('');
+    }
+  }
+
+  // 版本 A: 選擇單詞
+  function selectWord(element, word) {
+    element.style.visibility = 'hidden';
+    selectedWords.push({ word, element });
+    updateAnswerZone();
+  }
+
+  function updateAnswerZone() {
+    const zone = document.getElementById('answer-zone');
+    if (selectedWords.length === 0) {
+      zone.innerHTML = `<span style="color: #A0AEC0; font-size: 0.9rem;">點擊下方單詞拼湊句子（點擊此處清空）</span>`;
+    } else {
+      zone.innerHTML = selectedWords.map(item => `<span class="word-chip">${item.word}</span>`).join('');
+    }
+  }
+
+  function resetAnswerZone() {
+    selectedWords.forEach(item => item.element.style.visibility = 'visible');
+    selectedWords = [];
+    updateAnswerZone();
+  }
+
+  // 重置測驗狀態
+  function resetQuizState() {
+    selectedWords = [];
+    updateAnswerZone();
+    document.getElementById('type-b-input').value = '';
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('feedback').innerText = '';
+    document.getElementById('next-btn').style.display = 'none';
+  }
+
+  // 檢查答案
+  function checkAnswer() {
+    const quiz = grammarData[currentQuizIndex];
+    let userSentence = "";
+
+    if (currentQuizMode === 'A') {
+      userSentence = selectedWords.map(i => i.word).join(" ");
+    } else {
+      userSentence = document.getElementById('type-b-input').value.trim();
+    }
+
+    // 格式化比對 (忽略標點與大小寫差別)
+    const cleanUser = userSentence.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanTarget = quiz.en.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const feedback = document.getElementById('feedback');
+    if (cleanUser === cleanTarget) {
+      feedback.className = "feedback correct";
+      feedback.innerText = "🎉 太棒了！回答完全正確！";
+      document.getElementById('next-btn').style.display = 'inline-block';
+      speak(quiz.en);
+    } else {
+      feedback.className = "feedback incorrect";
+      feedback.innerText = "❌ 再試試看！點擊「提示」可以查看正確結構。";
+    }
+  }
+
+  // 提示功能
+  function showHint() {
+    const quiz = grammarData[currentQuizIndex];
+    const feedback = document.getElementById('feedback');
+    feedback.className = "feedback incorrect";
+    feedback.innerText = `💡 參考答案：${quiz.en}`;
+  }
+
+  // 下一題
+  function nextQuestion() {
+    currentQuizIndex = (currentQuizIndex + 1) % grammarData.length;
+    loadQuiz();
+  }
+
+  // 初始化
+  window.onload = function() {
+    renderLearnCards();
+  };
+</script>
+</body>
+</html>
